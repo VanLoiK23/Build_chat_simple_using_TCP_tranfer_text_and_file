@@ -1,8 +1,8 @@
 package controller.Handler;
 
 import java.io.ByteArrayOutputStream;
+import java.io.DataInputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.util.function.Consumer;
 
 import com.google.gson.Gson;
@@ -16,11 +16,11 @@ public class FileHandler {
 	private static final int BUFFER_SIZE = 4096;
 
 	private CloudinaryService cloudinaryService;
-	private InputStream inputStream;
+	private DataInputStream inputStream;
 	private Consumer<Packet> packetCallback;
 	private Gson gson;
 
-	public FileHandler(CloudinaryService cloudinaryService, Gson gson, InputStream inputStream) {
+	public FileHandler(CloudinaryService cloudinaryService, Gson gson, DataInputStream inputStream) {
 		this.cloudinaryService = cloudinaryService;
 		this.inputStream = inputStream;
 		this.gson = gson;

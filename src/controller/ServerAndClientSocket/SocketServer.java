@@ -1,11 +1,8 @@
 package controller.ServerAndClientSocket;
 
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.OutputStreamWriter;
 import java.net.Socket;
 import java.util.Vector;
 
@@ -15,7 +12,6 @@ import com.google.gson.GsonBuilder;
 
 import cloudinary.CloudinaryService;
 import controller.Handler.FileHandler;
-
 import model.ChatMessage;
 import model.FileInfo;
 import model.Packet;
@@ -24,9 +20,9 @@ import model.Packet;
 //Client handle
 public class SocketServer implements Runnable {
 	private Socket socket;
-	private BufferedReader in;
-	private BufferedWriter out;
-	private InputStream inputStream;
+	private DataInputStream in;
+	private DataOutputStream out;
+//	private InputStream inputStream;
 	public Gson gson;
 	private CloudinaryService cloudinaryService;
 
@@ -37,9 +33,9 @@ public class SocketServer implements Runnable {
 	public SocketServer(Socket socket) {
 		try {
 			this.socket = socket;
-			this.inputStream = socket.getInputStream();
-			this.in = new BufferedReader(new InputStreamReader(this.inputStream));
-			this.out = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()));
+//			this.inputStream = socket.getInputStream();
+			this.in = new DataInputStream(socket.getInputStream());
+			this.out = new DataOutputStream(socket.getOutputStream());
 			gson = Converters.registerAll(new GsonBuilder()).setDateFormat("EEE MMM dd HH:mm:ss z yyyy").create();
 			this.cloudinaryService = new CloudinaryService();
 
@@ -57,7 +53,7 @@ public class SocketServer implements Runnable {
 	public void run() {
 		try {
 			String message;
-			while ((message = in.readLine()) != null) {
+			while ((message = in.readUTF()) != null) {
 				
 
 				System.out.println("Received: " + message);
@@ -73,7 +69,7 @@ public class SocketServer implements Runnable {
 
 
 //					new Thread(() -> {
-						FileHandler fileHandler = new FileHandler(cloudinaryService, gson, inputStream);
+						FileHandler fileHandler = new FileHandler(cloudinaryService, gson, in);
 						fileHandler.setPacketCallback(packetReponse -> {
 							broadcast(gson.toJson(packetReponse));
 							
@@ -81,7 +77,6 @@ public class SocketServer implements Runnable {
 						});
 						
 						fileHandler.receiveFile(meta, chatMessage);
-//					    fileHandler.receiveFile(); // nhận file bằng inputStream.read(...)
 //					}).start();
 
 					break;
@@ -96,8 +91,7 @@ public class SocketServer implements Runnable {
 	}
 
 	private void sendSelfClient(Packet packet) throws IOException {
-		this.out.write(gson.toJson(packet));
-		this.out.newLine();
+		this.out.writeUTF(gson.toJson(packet));
 		this.out.flush();
 	}
 
@@ -109,8 +103,7 @@ public class SocketServer implements Runnable {
 					if (client.socket.isClosed())
 						continue;
 
-					client.out.write(message);
-					client.out.newLine();
+					client.out.writeUTF(message);
 					client.out.flush();
 				} catch (IOException e) {
 					client.close();

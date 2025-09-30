@@ -1,12 +1,10 @@
 package controller.ServerAndClientSocket;
 
-import java.io.BufferedReader;
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.OutputStream;
-import java.io.PrintWriter;
 import java.net.Socket;
 import java.time.LocalDateTime;
 import java.util.concurrent.BlockingQueue;
@@ -25,10 +23,10 @@ import model.User;
 public class SocketClient {
 	private static SocketClient instance;
 	private Socket socket;
-	private PrintWriter out;
-	private BufferedReader in;
+	private DataOutputStream out;
+	private DataInputStream in;
 	public Gson gson;
-	private OutputStream outputStream;
+//	private OutputStream outputStream;
 	private static final String SERVER = "192.168.1.159";// IP server
 	private static final int PORT = 12345;
 	private Consumer<ChatMessage> messageHandler;
@@ -38,9 +36,9 @@ public class SocketClient {
 	private SocketClient() {
 		try {
 			socket = new Socket(SERVER, PORT);
-			outputStream = socket.getOutputStream();
-			out = new PrintWriter(outputStream, true);
-			in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+//			outputStream = socket.getOutputStream();
+			out = new DataOutputStream(socket.getOutputStream());
+			in = new DataInputStream(socket.getInputStream());
 			gson = Converters.registerAll(new GsonBuilder()).setDateFormat("EEE MMM dd HH:mm:ss z yyyy").create();
 			responseQueue = new LinkedBlockingQueue<>();
 
@@ -58,9 +56,9 @@ public class SocketClient {
 		return instance;
 	}
 
-	public void sendPacket(Packet packet) {
+	public void sendPacket(Packet packet) throws IOException {
 		String json = gson.toJson(packet);
-		out.println(json);
+		out.writeUTF(json);
 		out.flush();
 	}
 
@@ -77,7 +75,7 @@ public class SocketClient {
 		new Thread(() -> {
 			try {
 				String msg;
-				while ((msg = in.readLine()) != null) {
+				while ((msg = in.readUTF()) != null) {
 					Packet packet = gson.fromJson(msg, Packet.class);
 					if (packet.getType().equals("MESSAGE")) {
 
@@ -126,7 +124,7 @@ public class SocketClient {
 				chatMessage.setContent(gson.toJson(new FileInfo(file.getName(), file.length(), null)));
 
 				String json = gson.toJson(packetRequest);
-				out.println(json);
+				out.writeUTF(json);
 				out.flush();
 
 				// Gửi nội dung file
@@ -135,9 +133,9 @@ public class SocketClient {
 				int count;
 				// ghi byte vào outPutStream và send
 				while ((count = fis.read(buffer)) > 0) {
-					outputStream.write(buffer, 0, count);
+					out.write(buffer, 0, count);
 				}
-				outputStream.flush();
+				out.flush();
 				fis.close();
 				System.out.println("File sent: " + file.getName());
 			} catch (IOException e) {
