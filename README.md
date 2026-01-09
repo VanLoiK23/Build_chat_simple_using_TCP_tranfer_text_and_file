@@ -4,6 +4,7 @@
 
 ## 📸 Demo / Screenshots
 
+![App Screenshot]
 <img width="374" height="167" alt="image" src="https://github.com/user-attachments/assets/9958d320-a581-4fa4-9bef-fb87518fab9f" />
 <img width="359" height="636" alt="image" src="https://github.com/user-attachments/assets/74a01d11-1e94-4fe1-82e5-9c3bfa8274ac" />
 <img width="360" height="635" alt="image" src="https://github.com/user-attachments/assets/5bbfa8af-9c3d-4f7f-b38a-57687a5b782a" />
